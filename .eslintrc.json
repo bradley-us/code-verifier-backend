@@ -15,6 +15,7 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "indent": 0
+        "indent": 0,
+        "no-unused-vars": 0
     }
 }
