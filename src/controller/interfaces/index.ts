@@ -5,6 +5,12 @@ export interface IHelloController {
 }
 
 export interface IUsersController {
-    // Read all users from DB
-    getUsers(): Promise<any>
+    // Read all users from DB || Find user by Id (ObjectId)
+    getUsers(id?: string): Promise<any>
+    // Delete user by Id
+    deleteUser(id?: string): Promise<any>
+    // Create new user
+    createUser(user: any): Promise<any>
+    // Update user
+    updateUser(id: string, user: any): Promise<any>
 }
