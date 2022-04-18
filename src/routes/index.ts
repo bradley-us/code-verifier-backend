@@ -5,6 +5,7 @@
 
 import express, { Request, Response } from 'express'
 import { LogInfo } from '../utils/logger'
+import authRouter from './AuthRouter'
 import helloRouter from './HelloRouter'
 import usersRouter from './UserRouter'
 
@@ -25,6 +26,8 @@ rootRouter.get('/', (req: Request, res: Response) => {
 server.use('/', rootRouter) // http://localhost:8000/api/
 server.use('/hello', helloRouter) // http://localhost:8000/api/hello => HelloRouter
 server.use('/users', usersRouter) // http://localhost:8000/api/users => UserRouter
+// Auth routes
+server.use('/auth', authRouter)
 // Add more routes to our App
 
 export default server

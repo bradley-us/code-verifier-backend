@@ -60,6 +60,7 @@ export class UserController implements IUsersController {
                 message: `User created successfully ${user.name}`
             }
         })
+        return res
     }
 
     @Put('/')
@@ -74,7 +75,7 @@ export class UserController implements IUsersController {
                 }
             })
         } else {
-            LogWarning('[/api/users] Update user by Id Request')
+            LogWarning('[/api/users] Update user WITHOUT ID')
             res = {
                 message: 'Please, provide an Id to update the user from DB'
             }

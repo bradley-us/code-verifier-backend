@@ -2,6 +2,9 @@ import { userEntity } from '../entities/User.entity'
 
 import { LogSuccess, LogError } from '../../utils/logger'
 import mongoose from 'mongoose'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { IUser } from '../interfaces/IUser.interface'
 
 // CRUD
 
@@ -49,7 +52,7 @@ export const createUser = async (user: any): Promise<any> => {
 
         return await userModel.create(user)
     } catch (error) {
-        LogError(`[ORM ERROR]: Deleting user by ID: ${error}`)
+        LogError(`[ORM ERROR]: Creating user: ${error}`)
     }
 }
 
@@ -63,4 +66,56 @@ export const updateUserById = async (id: string, user: any): Promise<any> => {
     } catch (error) {
         LogError(`[ORM ERROR]: Updating user by Id ${id}: ${error}`)
     }
+}
+
+// Register User
+export const registerUser = async (user: any): Promise<any | undefined> => {
+    try {
+        const userModel = userEntity()
+
+        return await userModel.create(user)
+    } catch (error) {
+        LogError(`[ORM ERROR]: Creating user: ${error}`)
+    }
+}
+
+// Login User
+export const loginUser = async (auth: any): Promise<any | undefined> => {
+    try {
+        const userModel = userEntity()
+
+        // Find User by email
+        userModel.findOne({ email: auth.email }, (err: any, user: IUser) => {
+            if (err) {
+                // TODO: Return an error > ERROR while searching (500)
+
+            }
+
+            if (!user) {
+                // TODO: Return an error > ERROR USER NOT FOUND (404)
+            }
+
+            const validPassword = bcrypt.compareSync(auth.password, user.password)
+
+            if (!validPassword) {
+                // TODO > NOT AUTHORIZED (401)
+            }
+
+            // Create JWT
+            // TODO: Secret must be in .env
+            const token = jwt.sign({ email: user.email }, 'MYSECRETWORD', {
+                expiresIn: '2h'
+            })
+
+            return token
+        })
+    } catch (error) {
+        LogError(`[ORM ERROR]: Creating user: ${error}`)
+    }
+}
+
+// Login User
+export const logoutUser = async (auth: any): Promise<any | undefined> => {
+    // TODO: NOT IMPLEMENTED
+    return null
 }
