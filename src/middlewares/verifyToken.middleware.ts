@@ -1,6 +1,13 @@
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 
+import dotenv from 'dotenv'
+
+// Config dotenv for reading environment variables
+dotenv.config()
+
+const secret: any = process.env.SECRETKEY || 'MYSECRETKEY'
+
 /**
  * @param { Request } req Original Request previous middleware of verification JWT
  * @param { Response } res Response to verification of JWT
@@ -19,8 +26,9 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         })
     }
 
-    // Verify the token obtained
-    jwt.verify(token, '', (err: any, decoded: any) => {
+    // TODO: Pass secret key
+    // Verify the token obtained. We pass the secret
+    jwt.verify(token, secret, (err: any, decoded: any) => {
         if (err) {
             return res.status(500).send(
                 {
