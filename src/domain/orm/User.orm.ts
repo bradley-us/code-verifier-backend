@@ -9,6 +9,10 @@ import jwt from 'jsonwebtoken'
 
 // Environment Variables
 import dotenv from 'dotenv'
+import { UserResponse } from '../types/UsersResponse.type'
+import { kataEntity } from '../entities/Kata.entity'
+import { IKata } from '../interfaces/IKata.interface'
+import { response } from 'express'
 
 // Configuration of environment variables
 dotenv.config()
@@ -21,12 +25,47 @@ const secret = process.env.SECRETKEY || 'MYSECRETKEY'
 /**
  * Method to obtain all users from Collection "Users" in Mongo Server
  */
-export const getAllUsers = async () => {
+export const getAllUsers = async (page: number, limit: number) => {
     try {
         const userModel = userEntity()
 
+        const response: UserResponse | undefined = {
+            users: [],
+            totalPages: 1,
+            currentPage: page
+        }
+
         // Search all users
-        return await userModel.find({ isDelete: false })
+        await userModel.find({ isDeleted: false })
+            .limit(limit)
+            .skip((page - 1) * limit)
+            .select('name email age katas')
+            .exec().then((users: IUser[]) => {
+                // users.forEach((user: IUser) => {
+                    // CLEAN PASSWORDS FOR ENDPOINT RESULT
+                //     user.password = ''
+                // })
+                response!.users = users
+            })
+
+        // Count total documents in collection "Users"
+        await userModel.countDocuments().then((total: number) => {
+            response!.totalPages = Math.ceil(total / limit)
+            response!.currentPage = page
+        })
+
+        return response
+        /**
+         * {
+         *  users: [
+         *      {}
+         *      ],
+         *  totalPages: 2,
+         *  currentPage: 1
+         * }
+         */
+
+        // return await userModel.find({ isDelete: false })
     } catch (error) {
         LogError(`[ORM ERROR]: Getting All Users: ${error}`)
     }
@@ -38,7 +77,7 @@ export const getUserById = async (id: string): Promise<any | undefined> => {
         const userModel = userEntity()
 
         // Search user by Id
-        return await userModel.findById(id)
+        return await userModel.findById(id).select('name email age katas')
 } catch (error) {
         LogError(`[ORM ERROR]: Getting user by ID: ${error}`)
     }
@@ -56,15 +95,15 @@ export const deleteUserById = async (id: string): Promise<any | undefined> => {
 }
 
 // Create New User
-export const createUser = async (user: any): Promise<any> => {
-    try {
-        const userModel = userEntity()
+// export const createUser = async (user: any): Promise<any> => {
+//     try {
+//         const userModel = userEntity()
 
-        return await userModel.create(user)
-    } catch (error) {
-        LogError(`[ORM ERROR]: Creating user: ${error}`)
-    }
-}
+//         return await userModel.create(user)
+//     } catch (error) {
+//         LogError(`[ORM ERROR]: Creating user: ${error}`)
+//     }
+// }
 
 // Update User by ID
 export const updateUserById = async (id: string, user: any): Promise<any> => {
@@ -131,4 +170,44 @@ export const loginUser = async (auth: any): Promise<any | undefined> => {
 export const logoutUser = async (auth: any): Promise<any | undefined> => {
     // TODO: NOT IMPLEMENTED
     return null
+}
+
+/**
+ * Method to obtain all users from Collection "Users" in Mongo Server
+ */
+ export const getAllUserKatas = async (page: number, limit: number, id: string) => {
+    try {
+        const userModel = userEntity()
+        const kataModel = kataEntity()
+
+        let katasFound: IKata[] = []
+
+        const response: any = {
+            katas: []
+        }
+
+        await userModel.findById(id).then(async (user: IUser) => {
+            response.user = user.name
+            response.user = user.email
+
+            // Create types to search
+            const objectIds: mongoose.Types.ObjectId[] = []
+            user.katas.forEach((kataID: string) => {
+                const objectID = new mongoose.Types.ObjectId(kataID)
+                objectIds.push(objectID)
+            })
+
+            await kataModel.find({ _id: { $in: objectIds } }).then((katas: IKata[]) => {
+                katasFound = katas
+            })
+        }).catch((error) => {
+            LogError(`[ORM ERROR]: Obtaining User: ${error}`)
+        })
+
+        response.katas = katasFound
+
+        return response
+    } catch (error) {
+        LogError(`[ORM ERROR]: Getting All Users: ${error}`)
+    }
 }

@@ -3,27 +3,28 @@ import { IUsersController } from './interfaces'
 import { LogSuccess, LogError, LogWarning } from '../utils/logger'
 
 // ORM
-import { createUser, deleteUserById, getAllUsers, getUserById, updateUserById } from '../domain/orm/User.orm'
+import { deleteUserById, getAllUserKatas, getAllUsers, getUserById, updateUserById } from '../domain/orm/User.orm'
 
 @Route('/api/users')
 @Tags('UserController')
 export class UserController implements IUsersController {
     /**
-     * Endpoint to retrieve the Users from the Collection "Users" or "User by Id" from DB
+     * Endpoint to retreive the Users in the Collection "users" from DB
+     * @param page Page where the user is
+     * @param limit the limit of the shown items
+     * @param id Id of the User
+     * @returns All Users o User Found by ID
      */
     @Get('/')
-    public async getUsers (@Query()id?: string): Promise<any> {
+    public async getUsers (@Query()page: number, @Query()limit: number, @Query()id?: string): Promise<any> {
         LogSuccess('[/api/users] Get all Users Request')
         let res: any = ''
         if (id) {
             LogSuccess(`[/api/users] Get user by Id Request ${id}`)
             res = await getUserById(id)
-            // Remove the password criteria response
-            res.password = ''
         } else {
             LogSuccess('[/api/users] Get all users Request')
-            res = await getAllUsers()
-            // TODO: Remove passwords from response
+            res = await getAllUsers(page, limit)
         }
         return res
     }
@@ -70,6 +71,23 @@ export class UserController implements IUsersController {
                 message: 'Please, provide an Id to update the user from DB'
             }
         }
+        return res
+    }
+
+    @Get('/katas') // users/katas
+    public async getKatas (@Query()page: number, @Query()limit: number, @Query()id: string): Promise<any> {
+        let res: any = ''
+
+        if (id) {
+            LogSuccess(`[/api/users/katas] Get User Katas by Id Request ${id}`)
+            res = await getAllUserKatas(page, limit, id)
+        } else {
+            LogSuccess('[/api/users] Get all User Katas Without ID Request')
+            res = {
+                message: 'ID from user is needed'
+            }
+        }
+
         return res
     }
 }
